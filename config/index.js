@@ -9,16 +9,16 @@ module.exports = {
 
     // Paths
     assetsSubDirectory: 'static',
-    assetsPublicPath: '/',
+    assetsPublicPath: '',
     proxyTable: {
       '/openidm': {
-        target: 'http://localhost:8080/openidm',
+        target: 'http://openidm.example.com:8080/openidm',
         pathRewrite: {'^/openidm' : ''}
       }
     },
 
     // Various Dev Server settings
-    host: 'localhost', // can be overwritten by process.env.HOST
+    host: 'openidm.example.com', // can be overwritten by process.env.HOST
     port: 8080, // can be overwritten by process.env.HOST, if port is in use, a free one will be determined
     autoOpenBrowser: false,
     errorOverlay: true,
