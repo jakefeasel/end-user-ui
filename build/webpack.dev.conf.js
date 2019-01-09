@@ -4,6 +4,7 @@ const webpack = require('webpack')
 const config = require('../config')
 const merge = require('webpack-merge')
 const baseWebpackConfig = require('./webpack.base.conf')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin')
 const portfinder = require('portfinder')
@@ -14,7 +15,7 @@ const devWebpackConfig = merge(baseWebpackConfig, {
   },
   // cheap-module-eval-source-map is faster for development
   devtool: config.dev.devtool,
-  
+
   // these devServer options should be customized in /config/index.js
   devServer: {
     clientLogLevel: 'warning',
@@ -37,7 +38,7 @@ const devWebpackConfig = merge(baseWebpackConfig, {
   plugins: [
     new webpack.DefinePlugin({
       'process.env': require('../config/dev.env')
-    }), 
+    }),
     new webpack.HotModuleReplacementPlugin(),
     new webpack.NamedModulesPlugin(), // HMR shows correct file names in console on update.
     new webpack.NoEmitOnErrorsPlugin(),
@@ -46,7 +47,29 @@ const devWebpackConfig = merge(baseWebpackConfig, {
       filename: 'index.html',
       template: 'index.html',
       inject: true
-    })
+    }),
+    new CopyWebpackPlugin([
+      {
+        from: 'node_modules/appauthhelper/appAuthHelperRedirect.html',
+        to: 'appAuthHelperRedirect.html',
+        toType: 'file'
+      },
+      {
+        from: 'node_modules/appauthhelper/appAuthHelperFetchTokensBundle.js',
+        to: 'node_modules/appauthhelper/appAuthHelperFetchTokensBundle.js',
+        toType: 'file'
+      },
+      {
+        from: 'node_modules/oidcsessioncheck/sessionCheck.html',
+        to: 'sessionCheck.html',
+        toType: 'file'
+      },
+      {
+        from: 'node_modules/oidcsessioncheck/sessionCheckFrame.js',
+        to: 'sessionCheckFrame.js',
+        toType: 'file'
+      }
+    ])
   ]
 })
 
