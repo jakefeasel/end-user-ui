@@ -16,12 +16,14 @@
     "build:platform": "cross-env npm_config_platformMode=true npm_config_idmClientID=test npm_config_amURL=test npm_config_idmURL=test npm_config_loginURL=localhost:8083 node build/build.js"
   },
   "dependencies": {
+    "appauthhelper": "0.0.1",
     "axios": "0.17.1",
     "bootstrap": "4.1.3",
     "bootstrap-vue": "2.0.0-rc.11",
     "es6-promise": "4.2.4",
     "lodash": "4.17.11",
     "moment": "2.22.2",
+    "oidcsessioncheck": "0.0.4",
     "vee-validate": "2.0.8",
     "vue": "2.5.16",
     "vue-i18n": "7.6.0",

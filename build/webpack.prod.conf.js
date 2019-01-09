@@ -123,6 +123,26 @@ const webpackConfig = merge(baseWebpackConfig, {
         from: path.resolve(__dirname, '../static'),
         to: config.build.assetsSubDirectory,
         ignore: ['.*']
+      },
+      {
+        from: 'node_modules/appauthhelper/appAuthHelperRedirect.html',
+        to: 'appAuthHelperRedirect.html',
+        toType: 'file'
+      },
+      {
+        from: 'node_modules/appauthhelper/appAuthHelperFetchTokensBundle.js',
+        to: 'node_modules/appauthhelper/appAuthHelperFetchTokensBundle.js',
+        toType: 'file'
+      },
+      {
+        from: 'node_modules/oidcsessioncheck/sessionCheck.html',
+        to: 'sessionCheck.html',
+        toType: 'file'
+      },
+      {
+        from: 'node_modules/oidcsessioncheck/sessionCheckFrame.js',
+        to: 'sessionCheckFrame.js',
+        toType: 'file'
       }
     ])
   ]
