@@ -13,6 +13,8 @@ import Vue from 'vue';
 import VueI18n from 'vue-i18n';
 import ToggleButton from 'vue-js-toggle-button';
 import PromisePoly from 'es6-promise';
+import AppAuthHelper from 'appauthhelper';
+import SessionCheck from 'oidcsessioncheck';
 
 // Turn off production warning messages
 Vue.config.productionTip = false;
@@ -42,27 +44,9 @@ router.beforeEach((to, from, next) => {
     if (_.has(to, 'meta.authenticate')) {
         if (_.isNull(UserStore.state.userId)) {
             let tempHeaders = _.extend({
-                    'content-type': 'application/json',
-                    'cache-control': 'no-cache',
-                    'x-requested-with': 'XMLHttpRequest'
+                    'Authorization': 'Bearer ' + sessionStorage.getItem('accessToken')
                 }, ApplicationStore.state.authHeaders || {}),
-                amLogin = false,
                 authInstance;
-
-            /*
-                If we are in working with OpenAM to prevent extra redirects and timeouts we have to catch
-                the session right here and configure the appropriate headers
-             */
-            if (sessionStorage.getItem('resubmitDataStoreToken') && sessionStorage.getItem('amToken')) {
-                tempHeaders = {
-                    'X-OpenIDM-NoSession': 'false',
-                    'X-OpenIDM-OAuth-Login': 'true',
-                    'X-OpenIDM-DataStoreToken': sessionStorage.getItem('amToken'),
-                    'X-Requested-With': 'XMLHttpRequest'
-                };
-
-                amLogin = true;
-            }
 
             authInstance = axios.create({
                 baseURL: idmContext,
@@ -71,20 +55,6 @@ router.beforeEach((to, from, next) => {
             });
 
             authInstance.post('/authentication?_action=login').then((userDetails) => {
-                /*
-                    Similar to oauthReturn we need to manipulate the correct headers for open AM here as well (if not the UI gets into an odd state where it will
-                    randomly go back to openAM to restore its session since the existing JWT returned from IDM has timed out.
-
-                    This is not ideal, but to create the least painful UI experience this is what we have to do for now.
-                 */
-                if (amLogin) {
-                    ApplicationStore.setAuthHeadersAction({
-                        'X-OpenIDM-OAuth-Login': 'true',
-                        'X-OpenIDM-DataStoreToken': sessionStorage.getItem('amToken'),
-                        'X-Requested-With': 'XMLHttpRequest'
-                    });
-                }
-
                 UserStore.setUserIdAction(userDetails.data.authorization.id);
                 UserStore.setManagedResourceAction(userDetails.data.authorization.component);
                 UserStore.setRolesAction(userDetails.data.authorization.roles);
@@ -205,6 +175,7 @@ Vue.mixin({
             }
 
             headers = _.extend(headers, this.$root.applicationStore.state.authHeaders || {});
+            headers['Authorization'] = 'Bearer ' + sessionStorage.getItem('accessToken');
 
             instance = axios.create({
                 baseURL: baseURL,
@@ -238,9 +209,7 @@ Vue.mixin({
         // Headers used for oauth requests and selfservice
         getAnonymousHeaders: function () {
             let headers = this.$root.applicationStore.state.authHeaders || {
-                'X-OpenIDM-NoSession': true,
-                'X-OpenIDM-Password': 'anonymous',
-                'X-OpenIDM-Username': 'anonymous'
+                'Authorization': 'Bearer ' + sessionStorage.getItem('accessToken')
             };
 
             return headers;
@@ -256,25 +225,7 @@ Vue.mixin({
         },
         // Log a user out of their existing session (both normal and fullstack)
         logoutUser: function () {
-            /* istanbul ignore next */
-            let idmInstance = this.getRequestService({
-                headers: this.getAnonymousHeaders()
-            });
-
-            /* istanbul ignore next */
-            idmInstance.post('/authentication?_action=logout').then((response) => {
-                this.$root.userStore.clearStoreAction();
-
-                /*
-                    In case of oauth + openAM we should always make sure these session variables are cleared on logout
-                 */
-                sessionStorage.removeItem('amToken');
-                sessionStorage.removeItem('resubmitDataStoreToken');
-                this.$root.applicationStore.clearAuthHeadersAction();
-                this.$root.applicationStore.clearLoginRedirect();
-
-                this.$router.push({name: 'Login'});
-            });
+            window.logout();
         },
         // Check if progressive profile is needed
         progressiveProfileCheck (userDetails, continueLogin, updateApiType) {
@@ -358,4 +309,63 @@ var startApp = function () {
         });
     };
 
-startApp();
+(function () {
+    // var amUri = 'http://openam.example.com:8081/openam',
+    var amUri = 'https://login.sample.forgeops.com',
+        commonSettings = {
+            clientId: 'appAuthClient',
+            authorizationEndpoint: amUri + '/oauth2/authorize'
+        };
+
+    AppAuthHelper.init({
+        clientId: commonSettings.clientId,
+        authorizationEndpoint: commonSettings.authorizationEndpoint,
+        scopes: 'openid profile profile_update consent_read workflow_tasks notifications',
+        tokenEndpoint: amUri + '/oauth2/access_token',
+        revocationEndpoint: amUri + '/oauth2/token/revoke',
+        endSessionEndpoint: amUri + '/oauth2/connect/endSession',
+        redirectUri: 'http://openidm.example.com:8081/appAuthHelperRedirect.html',
+        tokensAvailableHandler: function (claims) {
+            // this function is called every time the tokens are either
+            // originally obtained or renewed
+            var sessionCheck = new SessionCheck({
+                clientId: commonSettings.clientId,
+                opUrl: commonSettings.authorizationEndpoint,
+                redirectUri: 'http://openidm.example.com:8081/sessionCheck.html',
+                subject: claims.sub,
+                invalidSessionHandler: function () {
+                    AppAuthHelper.logout().then(function () {
+                        window.location.href = '';
+                    });
+                },
+                cooldownPeriod: 5
+            });
+            // check the validity of the session immediately
+            sessionCheck.triggerSessionCheck();
+
+            // check every minute
+            setInterval(function () {
+                sessionCheck.triggerSessionCheck();
+            }, 60000);
+            // check with every captured event
+            document.addEventListener('click', function () {
+                sessionCheck.triggerSessionCheck();
+            });
+            document.addEventListener('keypress', function () {
+                sessionCheck.triggerSessionCheck();
+            });
+
+            startApp();
+        }
+    });
+
+    // In this application, we want tokens immediately, before any user interaction is attempted
+    AppAuthHelper.getTokens();
+
+    // trigger logout from anywhere in the SPA by calling this global function
+    window.logout = function () {
+        AppAuthHelper.logout().then(function () {
+            window.location.href = '';
+        });
+    };
+}());
