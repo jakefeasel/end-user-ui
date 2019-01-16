@@ -322,10 +322,9 @@ var startApp = function () {
     };
 
 (function () {
-    // var amUri = 'http://openam.example.com:8081/openam',
     var amUri = 'https://login.sample.forgeops.com',
         commonSettings = {
-            clientId: 'appAuthClient',
+            clientId: 'endUserUIClient',
             authorizationEndpoint: amUri + '/oauth2/authorize'
         };
 
@@ -336,14 +335,12 @@ var startApp = function () {
         tokenEndpoint: amUri + '/oauth2/access_token',
         revocationEndpoint: amUri + '/oauth2/token/revoke',
         endSessionEndpoint: amUri + '/oauth2/connect/endSession',
-        redirectUri: 'http://openidm.example.com:8081/appAuthHelperRedirect.html',
         tokensAvailableHandler: function (claims) {
             // this function is called every time the tokens are either
             // originally obtained or renewed
             var sessionCheck = new SessionCheck({
                 clientId: commonSettings.clientId,
                 opUrl: commonSettings.authorizationEndpoint,
-                redirectUri: 'http://openidm.example.com:8081/sessionCheck.html',
                 subject: claims.sub,
                 invalidSessionHandler: function () {
                     AppAuthHelper.logout().then(function () {
