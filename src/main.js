@@ -323,6 +323,10 @@ var startApp = function () {
         tokenEndpoint: amUri + '/oauth2/access_token',
         revocationEndpoint: amUri + '/oauth2/token/revoke',
         endSessionEndpoint: amUri + '/oauth2/connect/endSession',
+        interactionRequiredHandler: function () {
+            startApp();
+        },
+
         tokensAvailableHandler: function (claims) {
             // this function is called every time the tokens are either
             // originally obtained or renewed

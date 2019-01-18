@@ -14,7 +14,7 @@
     "build": "node build/build.js"
   },
   "dependencies": {
-    "appauthhelper": "0.0.1",
+    "appauthhelper": "0.0.2",
     "axios": "0.17.1",
     "bootstrap": "4.1.3",
     "bootstrap-vue": "2.0.0-rc.11",
