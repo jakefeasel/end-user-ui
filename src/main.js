@@ -322,7 +322,7 @@ var startApp = function () {
     };
 
 (function () {
-    var amUri = 'https://sample.iam.forgeops.com/am',
+    var amUri = 'https://default.iam.forgeops.com/am',
         commonSettings = {
             clientId: 'endUserUIClient',
             authorizationEndpoint: amUri + '/oauth2/authorize'
@@ -331,14 +331,15 @@ var startApp = function () {
     AppAuthHelper.init({
         clientId: commonSettings.clientId,
         authorizationEndpoint: commonSettings.authorizationEndpoint,
-        scopes: 'openid profile profile_update consent_read workflow_tasks notifications',
+        scopes: 'openid fr:idm:profile fr:idm:profile_update fr:idm:consent_read fr:idm:notifications',
         tokenEndpoint: amUri + '/oauth2/access_token',
         revocationEndpoint: amUri + '/oauth2/token/revoke',
         endSessionEndpoint: amUri + '/oauth2/connect/endSession',
+/*      commented out to use the default behavior of full-page redirection to AM for login
         interactionRequiredHandler: function () {
             startApp();
         },
-
+*/
         tokensAvailableHandler: function (claims) {
             // this function is called every time the tokens are either
             // originally obtained or renewed
