@@ -322,7 +322,7 @@ var startApp = function () {
     };
 
 (function () {
-    var amUri = 'https://default.iam.forgeops.com/am',
+    var amUri = '/am',
         commonSettings = {
             clientId: 'endUserUIClient',
             authorizationEndpoint: amUri + '/oauth2/authorize'
