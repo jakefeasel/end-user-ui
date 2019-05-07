@@ -44,7 +44,7 @@ export default {
             this.state.platformMode = true;
         }
 
-        if (env.VUE_APP_loginURL) {
+        if (env.VUE_APP_loginURL && env.VUE_APP_loginURL !== "undefined") {
             this.state.loginURL = env.VUE_APP_loginURL;
         }
 

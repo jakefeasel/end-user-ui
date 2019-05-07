@@ -49,8 +49,13 @@ function getPlugins (env) {
                 toType: 'file'
             },
             {
+                from: 'node_modules/appauthhelper/appAuthServiceWorker.js',
+                to: 'appAuthServiceWorker.js',
+                toType: 'file'
+            },
+            {
                 from: 'node_modules/appauthhelper/appAuthHelperFetchTokensBundle.js',
-                to: 'node_modules/appauthhelper/appAuthHelperFetchTokensBundle.js',
+                to: 'appAuthHelperFetchTokensBundle.js',
                 toType: 'file'
             },
             {
@@ -70,6 +75,7 @@ function getPlugins (env) {
 }
 
 module.exports = {
+    publicPath: './',
     runtimeCompiler: true,
     pages: {
         index: {

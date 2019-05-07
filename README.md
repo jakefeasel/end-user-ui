@@ -205,6 +205,12 @@ The style guide gives an indication of how new themes and styles will impact bas
 # install dependencies
 npm install
 
+# Use the UI with the ForgeRock Identity Platform
+npm config set platformMode true
+npm config set idmClientID endUserUIClient
+npm config set amURL https://default.iam.example.com/am
+npm config set idmURL https://default.iam.example.com/openidm
+
 # serve with hot reload at localhost:8080 (increments by 1 automatically if port is in use).
 npm run dev
 

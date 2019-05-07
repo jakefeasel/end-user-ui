@@ -30,15 +30,12 @@ router.beforeEach((to, from, next) => {
 
     if (_.has(to, 'meta.authenticate')) {
         if (_.isNull(UserStore.state.userId)) {
-            let tempHeaders = _.extend({
-                    'Authorization': 'Bearer ' + sessionStorage.getItem('accessToken')
-                }, ApplicationStore.state.authHeaders || {}),
-                authInstance;
+            let authInstance;
 
             authInstance = axios.create({
                 baseURL: idmContext,
                 timeout: 5000,
-                headers: tempHeaders
+                headers: ApplicationStore.state.authHeaders
             });
 
             authInstance.post('/authentication?_action=login').then((userDetails) => {
@@ -138,7 +135,6 @@ Vue.mixin({
             }
 
             headers = _.extend(headers, this.$root.applicationStore.state.authHeaders || {});
-            headers['Authorization'] = 'Bearer ' + sessionStorage.getItem('accessToken');
 
             instance = axios.create({
                 baseURL: baseURL,
@@ -165,9 +161,7 @@ Vue.mixin({
         },
         // Headers used for oauth requests and selfservice
         getAnonymousHeaders: function () {
-            let headers = this.$root.applicationStore.state.authHeaders || {
-                'Authorization': 'Bearer ' + sessionStorage.getItem('accessToken')
-            };
+            let headers = this.$root.applicationStore.state.authHeaders || { };
 
             return headers;
         },
@@ -203,9 +197,7 @@ var startApp = function () {
         let idmInstance = axios.create({
             baseURL: idmContext,
             timeout: 5000,
-            headers: {
-                'Authorization': 'Bearer ' + sessionStorage.getItem('accessToken')
-            }
+            headers: { }
         });
 
         axios.all([
@@ -254,25 +246,25 @@ var startApp = function () {
         AppAuthHelper.init({
             clientId: commonSettings.clientId,
             authorizationEndpoint: commonSettings.authorizationEndpoint,
-            scopes: 'openid',
             tokenEndpoint: AM_URL + '/oauth2/access_token',
             revocationEndpoint: AM_URL + '/oauth2/token/revoke',
             endSessionEndpoint: AM_URL + '/oauth2/connect/endSession',
-            redirectUri: window.location.origin + '/appAuthHelperRedirect.html',
-            interactionRequiredHandler: function () {
-                redirectToLogin();
+            resourceServers: {
+                [ApplicationStore.state.idmBaseURL]: 'openid fr:idm:profile fr:idm:profile_update fr:idm:consent_read fr:idm:notifications'
             },
+            interactionRequiredHandler: ApplicationStore.state.loginURL ? function () {
+                redirectToLogin();
+            } : undefined,
             tokensAvailableHandler: function (claims) {
                 // this function is called every time the tokens are either
                 // originally obtained or renewed
                 var sessionCheck = new SessionCheck({
                     clientId: commonSettings.clientId,
                     opUrl: commonSettings.authorizationEndpoint,
-                    redirectUri: window.location.origin + '/sessionCheck.html',
                     subject: claims.sub,
                     invalidSessionHandler: function () {
                         AppAuthHelper.logout().then(function () {
-                            redirectToLogin();
+                            ApplicationStore.state.loginURL ? redirectToLogin() : AppAuthHelper.getTokens();
                         });
                     },
                     cooldownPeriod: 5
@@ -280,10 +272,6 @@ var startApp = function () {
                 // check the validity of the session immediately
                 sessionCheck.triggerSessionCheck();
 
-                // check every minute
-                setInterval(function () {
-                    sessionCheck.triggerSessionCheck();
-                }, 60000);
                 // check with every captured event
                 document.addEventListener('click', function () {
                     sessionCheck.triggerSessionCheck();
@@ -302,7 +290,7 @@ var startApp = function () {
         // trigger logout from anywhere in the SPA by calling this global function
         window.logout = function () {
             AppAuthHelper.logout().then(function () {
-                redirectToLogin();
+                ApplicationStore.state.loginURL ? redirectToLogin() : AppAuthHelper.getTokens();
             });
         };
     };
