@@ -43,15 +43,10 @@ router.beforeEach((to, from, next) => {
 
     if (_.has(to, 'meta.authenticate')) {
         if (_.isNull(UserStore.state.userId)) {
-            let tempHeaders = _.extend({
-                    'Authorization': 'Bearer ' + sessionStorage.getItem('accessToken')
-                }, ApplicationStore.state.authHeaders || {}),
-                authInstance;
-
-            authInstance = axios.create({
+            let authInstance = axios.create({
                 baseURL: idmContext,
                 timeout: 5000,
-                headers: tempHeaders
+                headers: ApplicationStore.state.authHeaders
             });
 
             authInstance.post('/authentication?_action=login').then((userDetails) => {
@@ -175,7 +170,6 @@ Vue.mixin({
             }
 
             headers = _.extend(headers, this.$root.applicationStore.state.authHeaders || {});
-            headers['Authorization'] = 'Bearer ' + sessionStorage.getItem('accessToken');
 
             instance = axios.create({
                 baseURL: baseURL,
@@ -208,9 +202,7 @@ Vue.mixin({
         },
         // Headers used for oauth requests and selfservice
         getAnonymousHeaders: function () {
-            let headers = this.$root.applicationStore.state.authHeaders || {
-                'Authorization': 'Bearer ' + sessionStorage.getItem('accessToken')
-            };
+            let headers = this.$root.applicationStore.state.authHeaders || { };
 
             return headers;
         },
@@ -319,15 +311,12 @@ var startApp = function () {
     AppAuthHelper.init({
         clientId: commonSettings.clientId,
         authorizationEndpoint: commonSettings.authorizationEndpoint,
-        scopes: 'openid profile profile_update consent_read workflow_tasks notifications',
         tokenEndpoint: amUri + '/oauth2/access_token',
         revocationEndpoint: amUri + '/oauth2/token/revoke',
         endSessionEndpoint: amUri + '/oauth2/connect/endSession',
-        interactionRequiredHandler: function () {
-            // assume we will be redirected to the login page
-            startApp();
+        resourceServers: {
+            [idmContext]: 'openid profile profile_update consent_read workflow_tasks notifications'
         },
-
         tokensAvailableHandler: function (claims) {
             // this function is called every time the tokens are either
             // originally obtained or renewed
@@ -345,10 +334,6 @@ var startApp = function () {
             // check the validity of the session immediately
             sessionCheck.triggerSessionCheck();
 
-            // check every minute
-            setInterval(function () {
-                sessionCheck.triggerSessionCheck();
-            }, 60000);
             // check with every captured event
             document.addEventListener('click', function () {
                 sessionCheck.triggerSessionCheck();

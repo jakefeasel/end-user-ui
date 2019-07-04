@@ -55,8 +55,13 @@ const devWebpackConfig = merge(baseWebpackConfig, {
         toType: 'file'
       },
       {
+        from: 'node_modules/appauthhelper/appAuthServiceWorker.js',
+        to: 'appAuthServiceWorker.js',
+        toType: 'file'
+      },
+      {
         from: 'node_modules/appauthhelper/appAuthHelperFetchTokensBundle.js',
-        to: 'node_modules/appauthhelper/appAuthHelperFetchTokensBundle.js',
+        to: 'appAuthHelperFetchTokensBundle.js',
         toType: 'file'
       },
       {

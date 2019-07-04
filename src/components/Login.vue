@@ -11,9 +11,6 @@
     import FloatingLabelInput from '@/components/utils/FloatingLabelInput';
     import CenterCard from '@/components/utils/CenterCard';
     import styles from '@/scss/main.scss';
-    import ForgeRockEmbeddedLogin from 'forgerockembeddedlogin';
-
-    var login = new ForgeRockEmbeddedLogin('https://login.sample.forgeops.com/json/realms/root/authenticate');
 
     export default {
         name: 'Login',
@@ -29,27 +26,9 @@
             };
         },
         created () {
-            login.startLogin()
-            .then(this.handleLoginResponse);
         },
         methods: {
-            handleLoginResponse () {
-                if (login.success()) {
-                    this.completeLogin();
-                } else if (login.failure()) {
-                    this.displayNotification('error', 'Login Failed! Try Again');
-                    login.startLogin().then(this.render);
-                } else {
-                    this.render();
-                }
-            },
             render () {
-                login.renderLogin().then((loginPrompt) => {
-                    document.getElementsByClassName('form-signin mb-3')[0].innerHTML = loginPrompt;
-                });
-            },
-            submit (e) {
-                return login.handleLoginSubmit(e).then(this.handleLoginResponse);
             }
         }
     };
