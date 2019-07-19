@@ -11,7 +11,7 @@ import ToggleButton from 'vue-js-toggle-button';
 import UserStore from './store/User';
 import VeeValidate from 'vee-validate';
 import Vue from 'vue';
-import AppAuthHelper from 'appauthhelper';
+import AppAuthHelper from 'appauthhelper/appAuthHelperCompat';
 import SessionCheck from 'oidcsessioncheck';
 import 'core-js/stable';
 
